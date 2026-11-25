@@ -1,0 +1,9 @@
+**
+!pyproject.toml
+!uv.lock
+!starter_algorithm/
+!starter_algorithm/**
+**/__pycache__
+**/*.pyc
+**/models
+**/*.onnx

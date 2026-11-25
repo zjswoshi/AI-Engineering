@@ -1,0 +1,110 @@
+include:
+  - ./database/mysql/compose.yaml
+  - ./database/postgres/compose.yaml
+  - ./database/mongodb/compose.yaml
+  - ./middleware/kafka/compose.yaml
+
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-local-admin}
+      DEMO_ANALYST_PASSWORD: ${DEMO_ANALYST_PASSWORD:-local-analyst}
+      DETECTION_TRANSPORT: ${DETECTION_TRANSPORT:-http}
+      SERVER_ADDRESS: 0.0.0.0
+      ALGORITHM_URL: http://algorithm-http:8000
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+        required: false
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "3", "http://127.0.0.1:8080/api/health"]
+      interval: 5s
+      timeout: 4s
+      retries: 15
+      start_period: 30s
+
+  vue:
+    profiles: [vue]
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        APP_DIR: vue
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${VUE_PORT:-8088}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 3s
+      timeout: 4s
+      retries: 10
+
+  react:
+    profiles: [react]
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        APP_DIR: react
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${REACT_PORT:-8089}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 3s
+      timeout: 4s
+      retries: 10
+
+  algorithm-http:
+    profiles: [http]
+    build:
+      context: ./algorithm
+      args:
+        TRANSPORT: http
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health', timeout=3).close()"]
+      interval: 5s
+      timeout: 4s
+      retries: 10
+
+  algorithm-kafka:
+    profiles: [kafka]
+    build:
+      context: ./algorithm
+      args:
+        TRANSPORT: kafka
+    command: ["python", "-m", "starter_algorithm.worker"]
+    restart: on-failure:5
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+
+  redis:
+    profiles: [redis]
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  redis_data:

@@ -1,0 +1,12 @@
+**
+!frontend/
+!frontend/react/
+!frontend/react/**
+!frontend/vue/
+!frontend/vue/**
+frontend/**/node_modules
+frontend/**/dist
+frontend/**/.env*
+frontend/**/*.tsbuildinfo
+!nginx/
+!nginx/default.conf

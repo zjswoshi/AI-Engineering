@@ -1,0 +1,20 @@
+services:
+  mongodb:
+    profiles: [mongodb]
+    image: mongo:8.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-local_mongo_root}
+    ports:
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --username \"$${MONGO_INITDB_ROOT_USERNAME}\" --password \"$${MONGO_INITDB_ROOT_PASSWORD}\" --authenticationDatabase admin --eval 'quit(db.adminCommand({ping: 1}).ok === 1 ? 0 : 1)'"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+volumes:
+  mongodb_data:

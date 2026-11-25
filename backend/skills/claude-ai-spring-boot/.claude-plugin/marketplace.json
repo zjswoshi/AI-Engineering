@@ -1,0 +1,11 @@
+{
+  "name": "piomin",
+  "owner": { "name": "Piotr Mińkowski" },
+  "plugins": [
+    {
+      "name": "spring-boot-template",
+      "source": { "source": "github", "repo": "piomin/claude-ai-spring-boot" },
+      "description": "Enterprise Spring Boot 4.x development with agents, skills, and best practices"
+    }
+  ]
+}

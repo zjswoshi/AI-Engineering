@@ -1,0 +1,11 @@
+{
+  "include": ["frontend/**/*.vue", "frontend/**/*.spec.ts", "frontend/**/*.test.ts", "frontend/**/*.test.tsx"],
+  "exclude": ["**/.env", "**/.env.*", "**/*.pem", "**/*.key", "**/node_modules/**", "**/dist/**", "**/target/**", "**/.venv/**", "**/test-results/**", "**/playwright-report/**"],
+  "rules": [
+    {
+      "path": "frontend/**",
+      "rule": "For frontend changes, verify that the Vue and React templates still work independently. Check that menus, buttons, and route guards reflect the relevant permission rules and that the API retains final authorization. Check same-origin /api requests, handling of request failures, and regression coverage for changed login, permission, and detection flows. Check that removing the detection example leaves the general admin shell usable.",
+      "merge_system_rule": true
+    }
+  ]
+}

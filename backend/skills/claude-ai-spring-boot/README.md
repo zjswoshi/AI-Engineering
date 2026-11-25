@@ -1,0 +1,249 @@
+# Spring Boot Plugin for Claude Code (v1.3.2)
+
+A Claude Code plugin with production-ready skills and agents for building Spring Boot 4.x / Java 21+ applications. Install the plugin and start generating your app — the skills and agents guide Claude to follow best practices for REST APIs with Problem Details errors, JPA, Flyway database migrations, security, testing, cloud-native deployment, and Kubernetes.
+
+## Installation
+
+Install from Anthropic marketplace
+
+```bash
+claude plugin install spring-boot-template@piomin
+```
+
+Or install directly from repository
+
+``` 
+claude plugin marketplace add piomin/claude-ai-spring-boot
+claude plugin install spring-boot-template@piomin
+```
+
+Then run Claude Code and type:
+```shell
+/plugin
+```
+
+To test locally during development:
+
+```bash
+claude --plugin-dir /path/to/claude-ai-spring-boot
+```
+
+### Using the skills with Codex
+
+The skills in `skills/` use the open `SKILL.md` format (frontmatter with `name` and `description`, optional `references/` folder), so [OpenAI Codex](https://developers.openai.com/codex/skills) can load them without changes. The repo is also a Codex plugin (`.codex-plugin/plugin.json`) with a marketplace file (`.agents/plugins/marketplace.json`).
+
+**As a plugin** (skills only, no agents):
+
+```bash
+codex plugin marketplace add piomin/claude-ai-spring-boot
+```
+
+Then restart Codex, open the Plugins Directory, choose the `piomin` marketplace and install `spring-boot-template`. Update later with `codex plugin marketplace upgrade piomin`.
+
+**Or as plain skills.** Codex discovers skills in `.agents/skills` (per repository) and `$HOME/.agents/skills` (per user):
+
+```bash
+git clone https://github.com/piomin/claude-ai-spring-boot.git
+
+# for all your projects
+mkdir -p ~/.agents/skills
+cp -r claude-ai-spring-boot/skills/* ~/.agents/skills/
+
+# or for a single project
+mkdir -p my-project/.agents/skills
+cp -r claude-ai-spring-boot/skills/* my-project/.agents/skills/
+```
+
+Codex follows symlinks, so you can `ln -s` each skill folder instead of copying to get updates with `git pull`. Restart Codex if the skills do not show up, then run `/skills` or type `$` to pick one, or just describe the task and Codex selects a matching skill.
+
+The `agents/` folder uses the Claude Code subagent format and is not loaded by the Codex plugin. Skills mention the `code-reviewer` and `security-engineer` agents as hand-offs; in Codex, ignore those references and apply the skill directly.
+
+### Using the skills and agents with OpenCode
+
+[OpenCode](https://opencode.ai) reads the same `SKILL.md` skills, and the agent definitions in `agents/` work in both tools: the frontmatter holds only `name`, `description` and `mode: subagent` (plus read-only settings for `code-reviewer`), and each agent inherits the model and tools you configure.
+
+```bash
+git clone https://github.com/piomin/claude-ai-spring-boot.git
+
+# for all your projects
+mkdir -p ~/.config/opencode/skills ~/.config/opencode/agents
+cp -r claude-ai-spring-boot/skills/* ~/.config/opencode/skills/
+cp claude-ai-spring-boot/agents/*.md ~/.config/opencode/agents/
+
+# or for a single project
+mkdir -p my-project/.opencode/skills my-project/.opencode/agents
+cp -r claude-ai-spring-boot/skills/* my-project/.opencode/skills/
+cp claude-ai-spring-boot/agents/*.md my-project/.opencode/agents/
+```
+
+OpenCode also discovers skills in `.agents/skills` and `.claude/skills`. Project rules go in `AGENTS.md` (OpenCode) or `CLAUDE.md` (Claude Code); the skills treat both the same.
+
+## What's Included
+
+### Agents (`agents/`)
+
+Specialized agents that Claude Code can invoke for specific tasks:
+
+| Agent | Purpose |
+|-------|---------|
+| `spring-boot-engineer` | Build Spring Boot 4.x apps with layered architecture and Problem Details errors; adds the OpenAPI contract rules when the API is built for a UI |
+| `architect` | Turns a GitHub issue labeled `architect` into up to 8 small, ordered issues with implementation plans (uses `gh`, runs unattended, read-only on code) |
+| `code-reviewer` | Read-only review of a diff or branch: fixes the scope, loads the `conventions` and `code-quality` skills, reports cited findings by severity |
+| `kubernetes-specialist` | K8s deployments, probes, ConfigMap/Secret, Prometheus, Skaffold |
+| `devops-engineer` | CI/CD pipelines, Paketo Buildpacks, Skaffold |
+| `docker-expert` | Multi-stage Dockerfiles, Paketo Buildpacks, image optimization |
+| `security-engineer` | Spring Security, OWASP, input validation, SSL Bundles |
+
+### Skills (`skills/`)
+
+Reusable knowledge that Claude loads contextually:
+
+| Skill | What it teaches |
+|-------|-----------------|
+| `conventions` | Mandatory project rules: No Lombok, constructor injection, RestClient, testing standards, conditional Flyway for relational databases, Problem Details, conditional OpenAPI contract rules for APIs built for a UI |
+| `spring-boot` | Core Spring Boot development with 7 reference guides (web incl. Problem Details and paging, OpenAPI with springdoc 3, data incl. Flyway migrations, security, cloud, Spring AI 2.x, testing) |
+| `code-quality` | Review checklist loaded on demand from 6 references (correctness, security, performance, Spring signals, REST semantics, code smells); points to `conventions` and other skills for project rules instead of repeating them |
+| `review-triage` | How to answer review feedback (PR comments, reviews, bot findings) without implementing everything: verify each remark against the code, accept, partly accept, reject or defer it with a one-line reason, and report point by point |
+| `design-patterns` | Classic patterns (Factory, Builder, Strategy) + enterprise (Saga, Outbox, CQRS) |
+| `testing-patterns` | JUnit 5, Mockito, MockMvc, RestTestClient, Testcontainers with @ServiceConnection, relation and status-endpoint integration tests, Podman |
+| `java-modern` | Java 21+ features: records, sealed classes, pattern matching, virtual threads |
+| `jpa-patterns` | JPA/Hibernate pitfalls (N+1, lazy loading), Hibernate 6/7, optimistic locking across HTTP requests, relation writes with OSIV off, schema drift |
+| `logging-patterns` | Structured JSON logging, SLF4J, MDC, AI-friendly formats |
+
+### Key Conventions
+
+The plugin enforces these rules via the `conventions` skill:
+
+- **No Lombok** — explicit constructors, getters/setters, `LoggerFactory.getLogger()`
+- **Constructor injection** — no `@Autowired` on fields
+- **RestClient** over RestTemplate/WebClient for blocking HTTP calls
+- **RestTestClient** with `@AutoConfigureRestTestClient` for integration tests
+- **Testcontainers** with `@ServiceConnection` (not `@DynamicPropertySource`)
+- **Jakarta Persistence** (not `javax.persistence`)
+- **Problem Details** (RFC 9457) for every error; **paged lists** as `PagedModel`; **optimistic locking** with `@Version` and 409
+- **OpenAPI contract rules**, only when the API is built for a UI (see below)
+- **Flyway** owns the schema (`ddl-auto: validate`) when the API persists to a Flyway-supported relational database; skipped for APIs without persistence, NoSQL-only APIs, or projects already using Liquibase
+- **Maven** with `pl.piomin.services` group ID
+- **CI pipeline** — auto-detected from existing project config
+- **Docker Compose** for local dependencies
+
+### Cloud-Native Coverage
+
+The `cloud.md` reference covers:
+
+- Spring Cloud (Config Server, Eureka, Gateway, LoadBalancer) and built-in `@Retryable`/`@ConcurrencyLimit`
+- Distributed tracing with OpenTelemetry (OTLP) and Micrometer Observation API
+- Virtual Threads, HTTP Interface Clients (`@HttpExchange`), GraalVM Native Image
+- Kubernetes: ConfigMap/Secret with `envFrom`, Prometheus annotations, startup/liveness/readiness probes, `preStop` hook, graceful shutdown
+- TLS: cert-manager (Ingress TLS + pod-level mTLS), SSL Bundles with hot reload
+- Config Tree for reading mounted secrets from files
+- Paketo Buildpacks via `spring-boot:build-image`
+- Skaffold with kustomize overlays (local, Kubernetes, OpenShift): no cluster, host, registry, namespace or secret in git
+- Probes and a PVC for PostgreSQL and Keycloak deployed next to the API; Docker Compose healthchecks that work with Podman
+- Demo data seeded by a Flyway callback into an empty database (`data.md`)
+
+## Usage
+
+After installing, describe what you want to build — Claude will use the skills and agents automatically:
+
+```bash
+cd my-project
+claude
+> "Build a REST API for managing orders with PostgreSQL"
+```
+
+For a relational database like PostgreSQL, the generated app includes Flyway migrations in `src/main/resources/db/migration`, `ddl-auto: validate`, and Testcontainers tests that verify all migrations were applied. APIs without persistence or with NoSQL stores get no Flyway configuration.
+
+### APIs built for a UI
+
+Some rules are **required only when the API is built for a UI** (or another client generated from its OpenAPI contract), for example a UI made from [crud-ui-blueprint](https://github.com/mmartofel/crud-ui-blueprint). Say so in your prompt ("the API backs a web UI generated from its OpenAPI contract") or in the project's `CLAUDE.md` / `AGENTS.md`. The `conventions` skill then loads `skills/spring-boot/references/ui-contract.md`, the single source of these rules:
+
+- `/api` base path, same origin (no CORS), operationIds the UI's generated client relies on
+- an OpenAPI contract generated by springdoc 3, exported to `contract/openapi.json` by a test and checked in CI, with `info.version` from the build
+- Problem Details field errors with a fixed set of codes the UI translates, `PUT` with a required `version`
+- typed list filters, relations as `{id, label}` summaries, 409 `in-use` instead of cascading deletes
+- the Keycloak realm layout the UI logs in with (no host or secret in the realm file, sign-in through the UI's host on any cluster), public `/actuator/health` and `/actuator/info`, and a README "Connect a UI" section
+- a `deploy/` layout shared with the UI repo (kustomize base and overlays for a local cluster, Kubernetes and OpenShift, Secrets created by a Skaffold hook), following the project's `docs/DEPLOY-CONVENTION.md` when it has one
+
+Without a UI, none of this is required: the generated API keeps Problem Details, paging and optimistic locking, and skips the contract export.
+
+You can also invoke skills and agents directly:
+
+```bash
+# Invoke a skill
+> /spring-boot-template:jpa-patterns
+
+# Use an agent
+> @agent-spring-boot-template:code-reviewer
+```
+
+## Directory Structure
+
+```
+.
+├── .agents/plugins/
+│   └── marketplace.json
+├── .claude-plugin/
+│   └── plugin.json
+├── .codex-plugin/
+│   └── plugin.json
+├── .github/
+│   ├── scripts/validate.sh
+│   └── workflows/publish-skills.yml
+├── agents/
+│   ├── architect.md
+│   ├── code-reviewer.md
+│   ├── devops-engineer.md
+│   ├── docker-expert.md
+│   ├── kubernetes-specialist.md
+│   ├── security-engineer.md
+│   └── spring-boot-engineer.md
+├── skills/
+│   ├── conventions/SKILL.md
+│   ├── code-quality/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── api-contract.md
+│   │       ├── correctness.md
+│   │       ├── performance.md
+│   │       ├── security.md
+│   │       ├── smells.md
+│   │       └── spring-conventions.md
+│   ├── design-patterns/SKILL.md
+│   ├── java-modern/SKILL.md
+│   ├── jpa-patterns/SKILL.md
+│   ├── logging-patterns/SKILL.md
+│   ├── review-triage/SKILL.md
+│   ├── spring-boot/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── ai.md
+│   │       ├── cloud.md
+│   │       ├── data.md
+│   │       ├── ui-contract.md
+│   │       ├── security.md
+│   │       ├── testing.md
+│   │       └── web.md
+│   └── testing-patterns/SKILL.md
+├── README.md
+└── LICENSE
+```
+
+## Releases
+
+Pushing a tag without a prefix, for example `1.3.2`, runs `.github/workflows/publish-skills.yml`. It checks the frontmatter of skills and agents and that the tag equals the version in both `plugin.json` files and in the README title, packs `skills/` and `agents/` into `skills.tar.gz`, pushes it as an OCI artifact to `quay.io/pminkows/claude-ai-spring-boot:<tag>` and creates a GitHub release. The workflow needs the repository secrets `QUAY_USERNAME` and `QUAY_PASSWORD` (a Quay robot account with write access to the repository). Run `.github/scripts/validate.sh` locally to do the checks before tagging.
+
+```bash
+# bump the version in both plugin.json files and in the README title, then
+git tag 1.3.2 && git push origin 1.3.2
+```
+
+The artifact is what the [ai-software-factory](https://github.com/piomin/ai-software-factory) pipelines pull with `oras pull`.
+
+## Blog Post
+
+You can find a detailed explanation of this plugin in the post: [Claude Code Template for Spring Boot](https://piotrminkowski.com/2026/03/24/claude-code-template-for-spring-boot/).
+
+## License
+
+Apache License 2.0

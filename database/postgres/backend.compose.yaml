@@ -1,0 +1,17 @@
+services:
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      POSTGRES_JDBC_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-app}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_postgres_app}
+      POSTGRES_MIGRATIONS_PATH: /app/db/migrations
+      DEMO_ACCOUNTS_ENABLED: ${DEMO_ACCOUNTS_ENABLED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./database/postgres/migrations
+        target: /app/db/migrations
+        read_only: true
