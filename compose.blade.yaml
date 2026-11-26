@@ -1,0 +1,85 @@
+name: blade-inspection
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: blade
+      POSTGRES_USER: blade
+      POSTGRES_PASSWORD: ${BLADE_DB_PASSWORD:?Set BLADE_DB_PASSWORD}
+    volumes:
+      - blade_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blade -d blade"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  algorithm:
+    build:
+      context: ./algorithm
+      dockerfile: Dockerfile.blade
+    restart: unless-stopped
+    environment:
+      BLADE_DATA_DIR: /data
+      BLADE_PROVIDER: CPUExecutionProvider
+      BLADE_MODEL_PATH: /models/blade_defect_v1.1.onnx
+      BLADE_MAX_EXPANDED_BYTES: ${BLADE_MAX_EXPANDED_BYTES:-30000000000}
+    volumes:
+      - ${BLADE_DATA_DIR:-./blade-data}/uploads:/data/uploads:ro
+      - ${BLADE_DATA_DIR:-./blade-data}/reports:/data/reports
+      - ${BLADE_MODEL_DIR:-./blade-models}:/models:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health', timeout=3).close()"]
+      interval: 5s
+      timeout: 4s
+      retries: 15
+      start_period: 30s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      algorithm:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres,blade
+      SERVER_ADDRESS: 0.0.0.0
+      POSTGRES_JDBC_URL: jdbc:postgresql://postgres:5432/blade
+      POSTGRES_USER: blade
+      POSTGRES_PASSWORD: ${BLADE_DB_PASSWORD:?Set BLADE_DB_PASSWORD}
+      POSTGRES_MIGRATIONS_PATH: /app/db/migrations
+      BLADE_ADMIN_PASSWORD: ${BLADE_ADMIN_PASSWORD:?Set BLADE_ADMIN_PASSWORD}
+      BLADE_ALGORITHM_URL: http://algorithm:8000
+      BLADE_DATA_DIR: /data
+      BLADE_MAX_UPLOAD_BYTES: ${BLADE_MAX_UPLOAD_BYTES:-10000000000}
+      BLADE_MAX_EXPANDED_BYTES: ${BLADE_MAX_EXPANDED_BYTES:-30000000000}
+    volumes:
+      - ./database/postgres/migrations:/app/db/migrations:ro
+      - ${BLADE_DATA_DIR:-./blade-data}/uploads:/data/uploads
+      - ${BLADE_DATA_DIR:-./blade-data}/reports:/data/reports:ro
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/api/health"]
+      interval: 5s
+      timeout: 4s
+      retries: 15
+      start_period: 30s
+
+  vue:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        APP_DIR: vue
+        VITE_BLADE_INSPECTION: "true"
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${BLADE_BIND_ADDRESS:-127.0.0.1}:${BLADE_WEB_PORT:-8090}:80"
+
+volumes:
+  blade_db:

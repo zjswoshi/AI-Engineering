@@ -4,6 +4,7 @@ import com.example.starter.exception.ApiError;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -29,9 +30,9 @@ class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
+    SecurityFilterChain apiSecurity(HttpSecurity http, @Value("${starter.auth.basic-challenge:true}") boolean basicChallenge) throws Exception {
         AuthenticationEntryPoint unauthorized = (request, response, failure) -> {
-            if (!"XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+            if (basicChallenge && !"XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
                 response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Realm\"");
             }
             writeProblem(response, ApiError.AUTHENTICATION_REQUIRED);
@@ -43,7 +44,9 @@ class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/detections").hasAnyRole("OPERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/detections", "/api/detection-tasks")
+                        .hasAnyRole("OPERATOR", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/detection-tasks", "/api/detection-tasks/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/me", "/api/detections").authenticated()
                         .anyRequest().denyAll())
                 .exceptionHandling(errors -> errors

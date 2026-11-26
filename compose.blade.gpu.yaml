@@ -1,0 +1,14 @@
+services:
+  algorithm:
+    build:
+      args:
+        BLADE_ORT_EXTRA: blade-gpu
+    environment:
+      BLADE_PROVIDER: CUDAExecutionProvider
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

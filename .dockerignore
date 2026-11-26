@@ -1,0 +1,10 @@
+.git
+**/.env
+**/.env.*
+**/node_modules
+**/dist
+**/target
+**/.venv
+**/__pycache__
+blade-data
+blade-models

@@ -64,7 +64,11 @@ public class PostgresAccountRepository implements AccountRepository {
     }
 
     public void createDemoAccountIfAbsent(String username, String passwordHash, String role) {
-        jdbc.sql("""
+        createAccountIfAbsent(username, passwordHash, role);
+    }
+
+    public boolean createAccountIfAbsent(String username, String passwordHash, String role) {
+        return jdbc.sql("""
                 WITH created AS (
                     INSERT INTO app_user (username, password_hash)
                     VALUES (:username, :passwordHash)
@@ -78,7 +82,7 @@ public class PostgresAccountRepository implements AccountRepository {
                 .param("username", username)
                 .param("passwordHash", passwordHash)
                 .param("role", role)
-                .update();
+                .update() == 1;
     }
 
     private record AssignedRole(UUID userId, short roleId) {}

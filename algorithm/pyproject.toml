@@ -10,6 +10,9 @@ http = ["fastapi>=0.115,<1", "uvicorn>=0.34,<1"]
 kafka = ["kafka-python>=2.3,<4"]
 onnx = ["numpy>=1.26,<3", "onnxruntime>=1.20,<2"]
 
+blade = ["numpy>=1.26,<3", "pillow>=11,<13"]
+blade-gpu = ["onnxruntime-gpu[cuda,cudnn]==1.22.0"]
+
 [dependency-groups]
 test = ["onnx>=1.17,<2"]
 

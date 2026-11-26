@@ -21,3 +21,6 @@ test-results/
 /tools/opencodereview/ocr
 /tools/opencodereview/ocr.exe
 !/tools/opencodereview/source/extensions/vscode/.vscode/
+testdata/
+/blade-data/
+/blade-models/

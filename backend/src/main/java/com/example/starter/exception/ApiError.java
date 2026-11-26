@@ -8,6 +8,11 @@ import org.springframework.http.ProblemDetail;
 public enum ApiError {
     INVALID_SAMPLE(HttpStatus.BAD_REQUEST, "样本编号须为 1 至 120 个字符。"),
     INVALID_ROLE(HttpStatus.BAD_REQUEST, "角色只能设为查看者或操作员。"),
+    INVALID_ARCHIVE(HttpStatus.BAD_REQUEST, "ZIP 无效，或未包含可处理的 JPG、JPEG、PNG 图片。"),
+    ARCHIVE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "上传文件超过大小限制。"),
+    UPLOAD_STORAGE_FULL(HttpStatus.SERVICE_UNAVAILABLE, "服务器存储空间不足。"),
+    INSPECTION_NOT_FOUND(HttpStatus.NOT_FOUND, "未找到该检测任务或文件。"),
+    REPORT_PENDING(HttpStatus.CONFLICT, "报告尚未生成。"),
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "请求参数或正文格式有误。"),
     AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, "请使用有效账号登录。"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "当前账号没有此权限。"),
