@@ -3,6 +3,7 @@ include:
   - ./database/postgres/compose.yaml
   - ./database/mongodb/compose.yaml
   - ./middleware/kafka/compose.yaml
+  - ./middleware/redis/compose.yaml
 
 services:
   backend:
@@ -93,20 +94,3 @@ services:
         condition: service_healthy
       backend:
         condition: service_healthy
-
-  redis:
-    profiles: [redis]
-    image: redis:8-alpine
-    command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-volumes:
-  redis_data:

@@ -18,10 +18,12 @@ algorithm/           Python 3.12+、FastAPI 入口、Kafka worker
 contracts/           HTTP API 和 Kafka 消息约定
 database/           MySQL、PostgreSQL、MongoDB 的独立运行配置
 middleware/kafka/    单节点开发用 Kafka
+middleware/redis/    可选缓存和本地持久卷
+storage/minio/       已有 MinIO 社区版的本地兼容测试
 docker/             通用前端镜像构建文件
 nginx/               静态站点和 /api/ 同源反向代理
 tools/               OpenCodeReview 源码和本地运行入口
-compose.yaml         容器编排与 Redis 配置
+compose.yaml         所选服务的容器编排
 .env.example         本地环境变量示例
 ```
 
@@ -46,13 +48,13 @@ compose.yaml         容器编排与 Redis 配置
 1. **保留选中的模块和开发指引。** 保留 `frontend/vue/`、`backend/` 和 `database/postgres/`，以及对应的 `AGENTS.md` 和本地 Skill。Vue 也会用到 `frontend/AGENTS.md`、`frontend/DESIGN.md` 和 `frontend/skills/`。保留根 `README.md` 和 `AGENTS.md`，按所选模块更新其中的导航。根 `skills/` 和 `tools/` 按需取用。
 2. **改成新项目的名称。** 修改 `frontend/vue/package.json` 的包名和 `frontend/vue/index.html` 的页面标题，同步更新 npm 锁文件。修改 `backend/pom.xml` 的 `groupId`、`artifactId` 和 `backend/src/main/resources/application.yaml` 的 `spring.application.name`。移动 `backend/src/main/java/com/example/starter/` 下的源码，更新 Java 的 `package`、`import` 和模块说明。若修改 POM 的 `finalName`，同时更新 `backend/Dockerfile` 中复制的 JAR 文件名。
 3. **替换 AI 检测示例。** [裁剪步骤和后台验收](examples/ai-detection/README.md)。 从 `frontend/vue/src/router/sections.ts` 移除检测页面和工作台卡片的注册，再移除 Vue 项目中的 `src/views/DetectionsView.vue` 和 `src/features/detection/`，把 Playwright 用例和模拟 API 改成设备管理场景。后端移除检测相关的 Controller、Service、Repository、DTO、Model 和传输适配器，更新 `SecurityConfig.java` 中的 `/api/detections` 规则。按需保留账号与角色代码。在 `sections.ts` 注册 `/devices` 页面，后端按 Controller、Service、Repository 分层添加 `/api/devices`，并在 `database/postgres/migrations/` 追加设备表迁移，例如 `V2__create_devices.sql`。在 `contracts/` 记录新接口，并更新模块说明。
-4. **先裁剪引用，再移除未选模块。** 按下表更新配置后，可以移除 `frontend/react/`、`algorithm/`、`database/mysql/`、`database/mongodb/` 和 `middleware/kafka/` 等未选目录。
+4. **先裁剪引用，再移除未选模块。** 按下表更新配置后，可以移除 `frontend/react/`、`algorithm/`、`database/mysql/`、`database/mongodb/`、`middleware/kafka/` 和 `middleware/redis/` 等未选目录。
 
 | 配置 | 此例需要调整的内容 |
 | --- | --- |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | 前端矩阵 `matrix.app` 只留 `vue`。移除 `algorithm` 任务，保留 Spring Boot 和所选数据库的 Compose 校验。 |
 | [`.github/workflows/publish-image.yml`](.github/workflows/publish-image.yml) | 如需发布镜像，组件选项和构建分支只留 `vue` 和 `backend`，保留 `docker/frontend.Dockerfile` 和 `nginx/default.conf`。 |
-| [`compose.yaml`](compose.yaml) | `include` 只留 PostgreSQL。移除 `react`、`algorithm-http`、`algorithm-kafka` 和 `redis` 服务及 `redis_data` 卷。清理 `backend` 的 Kafka 依赖和算法、Kafka 环境变量。保留 PostgreSQL 的[叠加配置](database/postgres/backend.compose.yaml)，其中定义了数据库连接和迁移挂载。 |
+| [`compose.yaml`](compose.yaml) | `include` 只留 PostgreSQL。移除 `react`、`algorithm-http`、`algorithm-kafka` 服务。清理 `backend` 的 Kafka 依赖和算法、Kafka 环境变量。保留 PostgreSQL 的[叠加配置](database/postgres/backend.compose.yaml)，其中定义了数据库连接和迁移挂载。 |
 | [`.env.example`](.env.example)、后端配置和 `pom.xml` | 删除未选服务的环境变量、`starter.detection` 和 `spring.kafka` 配置，以及移除检测适配器后用不到的 Kafka 和 HTTP 客户端依赖。保留 PostgreSQL 和所用账号的配置。 |
 
 ### 验证裁剪结果
@@ -95,6 +97,8 @@ docker compose -f compose.yaml -f database/mysql/backend.compose.yaml --profile 
 本地演示账号由 `DEMO_ACCOUNTS_ENABLED` 控制，首次创建时读取 `DEMO_ADMIN_PASSWORD` 和 `DEMO_ANALYST_PASSWORD`。已有账号沿用数据库里的密码哈希和角色分配。单独启动 PostgreSQL 及本机运行后端的方式见 [PostgreSQL 模块说明](database/postgres/AGENTS.md#spring-boot-接入)。
 
 ## 按需启动数据服务
+
+Redis 配置可单独复制。已有 MinIO 社区版项目可选用独立的本地兼容测试配置。[Redis 模块](middleware/redis/AGENTS.md) · [MinIO 模块](storage/minio/AGENTS.md)
 
 ```powershell
 docker compose up -d mysql
