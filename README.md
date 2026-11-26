@@ -29,6 +29,10 @@ compose.yaml         所选服务的容器编排
 
 后端按 `controller → service → repository` 分层。各包职责和扩展约定见 [backend/AGENTS.md](backend/AGENTS.md)。
 
+## 用 AI 创建新项目
+
+把 [START-PROJECT.md](START-PROJECT.md) 直接发给能操作工作区的 AI。它会按决策依赖分轮厘清需求，等你确认双方理解一致后，再制定计划、实现并验证。已有项目描述时可以和文件一起发。
+
 ## 技术选型与开发入口
 
 新项目按需选用下表中的目录，再从所选模块的 `AGENTS.md`、依赖清单和本地 Skill 开始开发。
