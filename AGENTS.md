@@ -9,11 +9,12 @@
 | `frontend/vue/`、`frontend/react/` | 两套独立的 TypeScript 前端模板。新业务通常选择一套 |
 | `backend/` | Spring Boot API、权限与检测任务 |
 | `algorithm/` | Python 检测算法、FastAPI 和 Kafka worker |
+| `examples/ai-detection/` | AI 检测示例的裁剪说明、业务与页面草案 |
 | `contracts/` | HTTP API 和 Kafka 消息约定 |
 | `middleware/` | 可选中间件运行配置 |
 | `database/` | MySQL、PostgreSQL 和 MongoDB 的独立配置及迁移归属 |
 | `docker/`、`nginx/` | 前端镜像构建、静态文件服务和 API 反向代理 |
-| `tools/` | 冒烟检查和代码审查工具 |
+| `tools/` | 代码审查工具 |
 | `skills/` | 跨模块的 AI 开发流程 |
 
 ## 工作规则

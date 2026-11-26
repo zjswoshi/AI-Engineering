@@ -70,6 +70,7 @@ services:
       context: ./algorithm
       args:
         TRANSPORT: http
+        ONNX_CPU: "${ONNX_CPU:-false}"
     healthcheck:
       test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health', timeout=3).close()"]
       interval: 5s
@@ -82,6 +83,7 @@ services:
       context: ./algorithm
       args:
         TRANSPORT: kafka
+        ONNX_CPU: "${ONNX_CPU:-false}"
     command: ["python", "-m", "starter_algorithm.worker"]
     restart: on-failure:5
     environment:

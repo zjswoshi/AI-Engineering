@@ -12,7 +12,9 @@ on:
           - react
           - backend
           - algorithm-http
+          - algorithm-http-onnx-cpu
           - algorithm-kafka
+          - algorithm-kafka-onnx-cpu
 
 permissions:
   contents: read
@@ -49,10 +51,14 @@ jobs:
               dockerfile=backend/Dockerfile
               build_args=()
               ;;
-            algorithm-http|algorithm-kafka)
+            algorithm-http|algorithm-kafka|algorithm-http-onnx-cpu|algorithm-kafka-onnx-cpu)
               context=algorithm
               dockerfile=algorithm/Dockerfile
-              build_args=(--build-arg "TRANSPORT=${COMPONENT#algorithm-}")
+              transport=${COMPONENT#algorithm-}
+              build_args=(--build-arg "TRANSPORT=${transport%-onnx-cpu}")
+              if [[ "$COMPONENT" == *-onnx-cpu ]]; then
+                build_args+=(--build-arg ONNX_CPU=true)
+              fi
               ;;
             *)
               echo "Unsupported component: $COMPONENT" >&2

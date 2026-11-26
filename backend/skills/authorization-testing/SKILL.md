@@ -23,4 +23,4 @@ description: 为 Spring Boot API 编写权限回归。适用于修改 Spring Sec
 - 测试任务归属时保留真实可见范围查询。当前可用 `InMemoryDetectionRepository` 放入夹具，使用独立用户和任务，隔离算法传输。新增持久层后按所选数据库补集成测试。
 - 构造有效请求来验证拒绝路径，避免把请求格式错误当作权限拒绝。权限变更涉及多个身份时，在同一用例中明确每次请求的调用者及预期。
 
-Spring Boot 4 的测试配置参考[随附的 Piomin 测试章节](../claude-ai-spring-boot/skills/spring-boot/references/testing.md)和 [Spring Security MockMvc](https://docs.spring.io/spring-security/reference/servlet/test/mockmvc/index.html)。模板当前 `pom.xml` 尚未声明测试依赖。开始实现测试时按锁定的 Spring Boot 版本配置所需的测试依赖，在 `backend/` 运行目标测试及 `mvn verify`，核对实际执行的测试数。
+Spring Boot 4 的测试配置参考[随附的 Piomin 测试章节](../claude-ai-spring-boot/skills/spring-boot/references/testing.md)和 [Spring Security MockMvc](https://docs.spring.io/spring-security/reference/servlet/test/mockmvc/index.html)。模板的 `AccountAccessTest` 使用真实 HTTP 请求验证管理员接口。在 `backend/` 执行 `mvn -Dtest=AccountAccessTest test` 或 `mvn verify`，核对测试数。

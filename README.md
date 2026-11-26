@@ -36,7 +36,7 @@ compose.yaml         容器编排与 Redis 配置
 | 前端 | 从 [Vue + Element Plus](frontend/vue/AGENTS.md) 或 [React + Ant Design](frontend/react/AGENTS.md) 选一套。两套都使用 Tailwind CSS，各自维护依赖、API 客户端、样式和测试。 |
 | 后端 | [Spring Boot](backend/AGENTS.md) 提供 Controller、Service、Repository 分层，以及权限、统一错误和日志的参考实现。 |
 | 算法 | 在 [Python 算法目录](algorithm/AGENTS.md) 下按算法组织前处理、ONNX 模型加载和后处理。需要独立服务时，参考 FastAPI 的 HTTP 入口或 Kafka worker。 |
-| 数据库 | 按业务数据模型选 [PostgreSQL](database/postgres/AGENTS.md)、[MySQL](database/mysql/AGENTS.md) 或 [MongoDB](database/mongodb/AGENTS.md)。PostgreSQL 和 MySQL 提供 Flyway 迁移和 Spring Boot 接入参考，MongoDB 提供独立的服务配置。 |
+| 数据库 | 按业务数据模型选 [PostgreSQL](database/postgres/AGENTS.md)、[MySQL](database/mysql/AGENTS.md) 或 [MongoDB](database/mongodb/AGENTS.md)。PostgreSQL profile 已接入账号持久化。MySQL 提供 Flyway 迁移和可复制的 Spring Boot 配置，演示账号默认保存在内存。MongoDB 提供独立的服务配置。 |
 | 工程配套 | 按需参考 [Docker](docker/AGENTS.md)、[Nginx](nginx/AGENTS.md) 和 [中间件](middleware/AGENTS.md) 配置。 |
 
 ## 新项目取用清单
@@ -45,12 +45,12 @@ compose.yaml         容器编排与 Redis 配置
 
 1. **保留选中的模块和开发指引。** 保留 `frontend/vue/`、`backend/` 和 `database/postgres/`，以及对应的 `AGENTS.md` 和本地 Skill。Vue 也会用到 `frontend/AGENTS.md`、`frontend/DESIGN.md` 和 `frontend/skills/`。保留根 `README.md` 和 `AGENTS.md`，按所选模块更新其中的导航。根 `skills/` 和 `tools/` 按需取用。
 2. **改成新项目的名称。** 修改 `frontend/vue/package.json` 的包名和 `frontend/vue/index.html` 的页面标题，同步更新 npm 锁文件。修改 `backend/pom.xml` 的 `groupId`、`artifactId` 和 `backend/src/main/resources/application.yaml` 的 `spring.application.name`。移动 `backend/src/main/java/com/example/starter/` 下的源码，更新 Java 的 `package`、`import` 和模块说明。若修改 POM 的 `finalName`，同时更新 `backend/Dockerfile` 中复制的 JAR 文件名。
-3. **替换 AI 检测示例。** 从 `frontend/vue/src/router/sections.ts` 移除检测页面和工作台卡片的注册，再移除 Vue 项目中的 `src/views/DetectionsView.vue` 和 `src/features/detection/`，把 Playwright 用例和模拟 API 改成设备管理场景。后端移除检测相关的 Controller、Service、Repository、DTO、Model 和传输适配器，更新 `SecurityConfig.java` 中的 `/api/detections` 规则。按需保留账号与角色代码。在 `sections.ts` 注册 `/devices` 页面，后端按 Controller、Service、Repository 分层添加 `/api/devices`，并在 `database/postgres/migrations/` 追加设备表迁移，例如 `V2__create_devices.sql`。在 `contracts/` 记录新接口，并更新模块说明。
+3. **替换 AI 检测示例。** [裁剪步骤和后台验收](examples/ai-detection/README.md)。 从 `frontend/vue/src/router/sections.ts` 移除检测页面和工作台卡片的注册，再移除 Vue 项目中的 `src/views/DetectionsView.vue` 和 `src/features/detection/`，把 Playwright 用例和模拟 API 改成设备管理场景。后端移除检测相关的 Controller、Service、Repository、DTO、Model 和传输适配器，更新 `SecurityConfig.java` 中的 `/api/detections` 规则。按需保留账号与角色代码。在 `sections.ts` 注册 `/devices` 页面，后端按 Controller、Service、Repository 分层添加 `/api/devices`，并在 `database/postgres/migrations/` 追加设备表迁移，例如 `V2__create_devices.sql`。在 `contracts/` 记录新接口，并更新模块说明。
 4. **先裁剪引用，再移除未选模块。** 按下表更新配置后，可以移除 `frontend/react/`、`algorithm/`、`database/mysql/`、`database/mongodb/` 和 `middleware/kafka/` 等未选目录。
 
 | 配置 | 此例需要调整的内容 |
 | --- | --- |
-| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | 前端矩阵 `matrix.app` 只留 `vue`。移除 `algorithm` 任务，保留 Spring Boot 和 Compose 校验。 |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | 前端矩阵 `matrix.app` 只留 `vue`。移除 `algorithm` 任务，保留 Spring Boot 和所选数据库的 Compose 校验。 |
 | [`.github/workflows/publish-image.yml`](.github/workflows/publish-image.yml) | 如需发布镜像，组件选项和构建分支只留 `vue` 和 `backend`，保留 `docker/frontend.Dockerfile` 和 `nginx/default.conf`。 |
 | [`compose.yaml`](compose.yaml) | `include` 只留 PostgreSQL。移除 `react`、`algorithm-http`、`algorithm-kafka` 和 `redis` 服务及 `redis_data` 卷。清理 `backend` 的 Kafka 依赖和算法、Kafka 环境变量。保留 PostgreSQL 的[叠加配置](database/postgres/backend.compose.yaml)，其中定义了数据库连接和迁移挂载。 |
 | [`.env.example`](.env.example)、后端配置和 `pom.xml` | 删除未选服务的环境变量、`starter.detection` 和 `spring.kafka` 配置，以及移除检测适配器后用不到的 Kafka 和 HTTP 客户端依赖。保留 PostgreSQL 和所用账号的配置。 |
@@ -67,7 +67,7 @@ docker compose -f compose.yaml -f database/postgres/backend.compose.yaml --profi
 
 ### 改用 MySQL
 
-保留 `database/mysql/`，在根 Compose 的 `include` 中保留 MySQL 配置，并保留 `.env.example` 的 `MYSQL_*` 变量。按 [MySQL 模块说明](database/mysql/AGENTS.md#接入-spring-boot) 接入 MySQL profile 和迁移，将 CI 的 PostgreSQL 叠加配置校验换成 MySQL 对应的文件。裁剪完成后，下列命令应只列出 `backend`、`vue` 和 `mysql`。
+保留 `database/mysql/`，在根 Compose 的 `include` 中保留 MySQL 配置，并保留 `.env.example` 的 `MYSQL_*` 变量。按 [MySQL 模块说明](database/mysql/AGENTS.md#接入-spring-boot) 接入 MySQL profile 和迁移，在 CI 中保留 MySQL 叠加配置校验并移除 PostgreSQL 对应的检查。裁剪完成后，下列命令应只列出 `backend`、`vue` 和 `mysql`。
 
 ```powershell
 docker compose -f compose.yaml -f database/mysql/backend.compose.yaml --profile '*' config --services
@@ -152,9 +152,9 @@ OpenCodeReview 源码随项目保存在 `tools/opencodereview/source/`。Windows
 
 ## CI/CD
 
-[CI](.github/workflows/ci.yml) 在提交到 `main` 和向 `main` 发起 PR 时运行。Vue 和 React 分别做类型检查、构建和 Playwright 回归，浏览器测试使用模拟 API。后端用 JDK 21 执行 `mvn verify`，算法用 Python 3.12 检查锁文件、传输入口和 ONNX Runtime CPU 环境，Compose 检查基础配置和 PostgreSQL 叠加配置。复制模板后，按项目选型保留对应的构建任务和发布选项。
+[CI](.github/workflows/ci.yml) 在提交到 `main` 和向 `main` 发起 PR 时运行。Vue 和 React 分别做类型检查、构建和 Playwright 回归，浏览器测试使用模拟 API。后端用 JDK 21 执行 `mvn verify`，算法用 Python 3.12 检查锁文件、传输入口并用微型模型验证 CPU 推理，Compose 检查基础配置和两种关系数据库的叠加配置。复制模板后，按项目选型保留对应的构建任务和发布选项。
 
-需要交付镜像时，在 GitHub 的 **Actions → Publish image → Run workflow** 选择 `main` 和一个组件。工作流用仓库的 `GITHUB_TOKEN` 将选定的 `linux/amd64` 镜像推到 GHCR。镜像标签为 `ghcr.io/<小写仓库所有者>/<小写仓库名>-<组件>:sha-<完整提交 SHA>`。Kafka 算法镜像使用 Compose 中的 worker 命令 `python -m starter_algorithm.worker`。在目标环境接入镜像、模型权重和配置。
+需要交付镜像时，在 GitHub 的 **Actions → Publish image → Run workflow** 选择 `main` 和一个组件。工作流用仓库的 `GITHUB_TOKEN` 将选定的 `linux/amd64` 镜像推到 GHCR。镜像标签为 `ghcr.io/<小写仓库所有者>/<小写仓库名>-<组件>:sha-<完整提交 SHA>`。Kafka 算法镜像使用 Compose 中的 worker 命令 `python -m starter_algorithm.worker`。算法 CPU 镜像选择 `algorithm-http-onnx-cpu` 或 `algorithm-kafka-onnx-cpu`。权重挂载和验证见[算法模块说明](algorithm/AGENTS.md#cpu-推理镜像)。
 
 ## AI 协作入口
 

@@ -10,5 +10,8 @@ http = ["fastapi>=0.115,<1", "uvicorn>=0.34,<1"]
 kafka = ["kafka-python>=2.3,<4"]
 onnx = ["numpy>=1.26,<3", "onnxruntime>=1.20,<2"]
 
+[dependency-groups]
+test = ["onnx>=1.17,<2"]
+
 [tool.fastapi]
 entrypoint = "starter_algorithm.http:app"

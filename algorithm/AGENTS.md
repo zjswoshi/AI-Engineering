@@ -24,6 +24,14 @@
 - 使用 Hugging Face 模型评估时，读取 `skills/huggingface-community-evals/SKILL.md`，根据本机资源选后端、数据及基准。
 - 添加依赖时更新 `pyproject.toml` 与 `uv.lock`。验证 ONNX 接入时记录实际会话的执行后端。
 
+## CPU 推理镜像
+
+在根 `.env` 设置 `ONNX_CPU=true`，再按选定的 `http` 或 `kafka` profile 构建算法服务。也可以在 `algorithm/` 单独构建，例如 `docker build --build-arg TRANSPORT=http --build-arg ONNX_CPU=true -t my-algorithm:cpu .`。此选项安装 NumPy 和 ONNX Runtime CPU。传输层默认运行演示函数，接入实际模型时在相应入口复用 `Predictor`。
+
+例如将主机的模型目录只读挂载到 `/models`，使用 `Predictor(model_path=Path("/models/model.onnx"))` 指定文件。ONNX 外部张量文件与模型一起挂载，保持原相对路径。GitHub 手动发布时选择带 `-onnx-cpu` 后缀的组件以区分镜像。
+
+在 `algorithm/` 运行 `uv run --locked --extra onnx --group test python -m unittest discover -s tests -v` 可生成临时微型模型，并验证 CPU 上的前处理、推理和结果。
+
 上游参考
 
 - [Hugging Face Community Evals](https://github.com/huggingface/skills/tree/main/skills/huggingface-community-evals)
