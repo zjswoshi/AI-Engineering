@@ -20,7 +20,7 @@ database/           MySQL、PostgreSQL、MongoDB 的独立运行配置
 middleware/kafka/    单节点开发用 Kafka
 docker/             通用前端镜像构建文件
 nginx/               静态站点和 /api/ 同源反向代理
-tools/               冒烟检查和代码审查
+tools/               OpenCodeReview 源码和本地运行入口
 compose.yaml         容器编排与 Redis 配置
 .env.example         本地环境变量示例
 ```
@@ -36,10 +36,42 @@ compose.yaml         容器编排与 Redis 配置
 | 前端 | 从 [Vue + Element Plus](frontend/vue/AGENTS.md) 或 [React + Ant Design](frontend/react/AGENTS.md) 选一套。两套都使用 Tailwind CSS，各自维护依赖、API 客户端、样式和测试。 |
 | 后端 | [Spring Boot](backend/AGENTS.md) 提供 Controller、Service、Repository 分层，以及权限、统一错误和日志的参考实现。 |
 | 算法 | 在 [Python 算法目录](algorithm/AGENTS.md) 下按算法组织前处理、ONNX 模型加载和后处理。需要独立服务时，参考 FastAPI 的 HTTP 入口或 Kafka worker。 |
-| 数据库 | 按业务数据模型选 [PostgreSQL](database/postgres/AGENTS.md)、[MySQL](database/mysql/AGENTS.md) 或 [MongoDB](database/mongodb/AGENTS.md)。PostgreSQL 有 Spring Boot 和 Flyway 接入示例，其他引擎提供各自的服务配置。 |
+| 数据库 | 按业务数据模型选 [PostgreSQL](database/postgres/AGENTS.md)、[MySQL](database/mysql/AGENTS.md) 或 [MongoDB](database/mongodb/AGENTS.md)。PostgreSQL 和 MySQL 提供 Flyway 迁移和 Spring Boot 接入参考，MongoDB 提供独立的服务配置。 |
 | 工程配套 | 按需参考 [Docker](docker/AGENTS.md)、[Nginx](nginx/AGENTS.md) 和 [中间件](middleware/AGENTS.md) 配置。 |
 
-例如做设备管理后台，可以选 Vue、Spring Boot 和 PostgreSQL，从 Vue 的 `src/router/sections.ts` 注册设备页，在后端按 Controller、Service、Repository 分层添加接口，再把设备表变更放进所选数据库的迁移目录。AI 检测示例展示前端页面、后端接口和算法入口的衔接方式，后续项目按自己的业务编写接口与数据模型。
+## 新项目取用清单
+
+以设备管理后台为例，选择 Vue、Spring Boot 和 PostgreSQL。以下裁剪在新项目的副本中进行。
+
+1. **保留选中的模块和开发指引。** 保留 `frontend/vue/`、`backend/` 和 `database/postgres/`，以及对应的 `AGENTS.md` 和本地 Skill。Vue 也会用到 `frontend/AGENTS.md`、`frontend/DESIGN.md` 和 `frontend/skills/`。保留根 `README.md` 和 `AGENTS.md`，按所选模块更新其中的导航。根 `skills/` 和 `tools/` 按需取用。
+2. **改成新项目的名称。** 修改 `frontend/vue/package.json` 的包名和 `frontend/vue/index.html` 的页面标题，同步更新 npm 锁文件。修改 `backend/pom.xml` 的 `groupId`、`artifactId` 和 `backend/src/main/resources/application.yaml` 的 `spring.application.name`。移动 `backend/src/main/java/com/example/starter/` 下的源码，更新 Java 的 `package`、`import` 和模块说明。若修改 POM 的 `finalName`，同时更新 `backend/Dockerfile` 中复制的 JAR 文件名。
+3. **替换 AI 检测示例。** 从 `frontend/vue/src/router/sections.ts` 移除检测页面和工作台卡片的注册，再移除 Vue 项目中的 `src/views/DetectionsView.vue` 和 `src/features/detection/`，把 Playwright 用例和模拟 API 改成设备管理场景。后端移除检测相关的 Controller、Service、Repository、DTO、Model 和传输适配器，更新 `SecurityConfig.java` 中的 `/api/detections` 规则。按需保留账号与角色代码。在 `sections.ts` 注册 `/devices` 页面，后端按 Controller、Service、Repository 分层添加 `/api/devices`，并在 `database/postgres/migrations/` 追加设备表迁移，例如 `V2__create_devices.sql`。在 `contracts/` 记录新接口，并更新模块说明。
+4. **先裁剪引用，再移除未选模块。** 按下表更新配置后，可以移除 `frontend/react/`、`algorithm/`、`database/mysql/`、`database/mongodb/` 和 `middleware/kafka/` 等未选目录。
+
+| 配置 | 此例需要调整的内容 |
+| --- | --- |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | 前端矩阵 `matrix.app` 只留 `vue`。移除 `algorithm` 任务，保留 Spring Boot 和 Compose 校验。 |
+| [`.github/workflows/publish-image.yml`](.github/workflows/publish-image.yml) | 如需发布镜像，组件选项和构建分支只留 `vue` 和 `backend`，保留 `docker/frontend.Dockerfile` 和 `nginx/default.conf`。 |
+| [`compose.yaml`](compose.yaml) | `include` 只留 PostgreSQL。移除 `react`、`algorithm-http`、`algorithm-kafka` 和 `redis` 服务及 `redis_data` 卷。清理 `backend` 的 Kafka 依赖和算法、Kafka 环境变量。保留 PostgreSQL 的[叠加配置](database/postgres/backend.compose.yaml)，其中定义了数据库连接和迁移挂载。 |
+| [`.env.example`](.env.example)、后端配置和 `pom.xml` | 删除未选服务的环境变量、`starter.detection` 和 `spring.kafka` 配置，以及移除检测适配器后用不到的 Kafka 和 HTTP 客户端依赖。保留 PostgreSQL 和所用账号的配置。 |
+
+### 验证裁剪结果
+
+在 `frontend/vue/` 执行 `npm.cmd ci`、`npm.cmd run build` 和更新后的 `npm.cmd run test:e2e`，在 `backend/` 执行 `mvn verify`。保留 Compose 时，在项目根目录运行以下命令，确认服务清单仅包含 `backend`、`vue`、`postgres`。
+
+```powershell
+docker compose -f compose.yaml -f database/postgres/backend.compose.yaml --profile '*' config --services
+```
+
+推送新项目后，确认 CI 只检查所选模块。若保留 PostgreSQL profile，可参考数据库模块的步骤，从空库验证 Flyway 迁移和账号权限。
+
+### 改用 MySQL
+
+保留 `database/mysql/`，在根 Compose 的 `include` 中保留 MySQL 配置，并保留 `.env.example` 的 `MYSQL_*` 变量。按 [MySQL 模块说明](database/mysql/AGENTS.md#接入-spring-boot) 接入 MySQL profile 和迁移，将 CI 的 PostgreSQL 叠加配置校验换成 MySQL 对应的文件。裁剪完成后，下列命令应只列出 `backend`、`vue` 和 `mysql`。
+
+```powershell
+docker compose -f compose.yaml -f database/mysql/backend.compose.yaml --profile '*' config --services
+```
 
 ## AI 检测示例运行参考
 
@@ -97,7 +129,7 @@ Vue 开发端口为 `5173`，React 为 `5174`。Vite 默认转发 `/api/` 到 `h
 
 - 前端在各自目录运行 `npm.cmd ci`、`npm.cmd run build`。后端在 `backend/` 运行 `mvn verify`。
 - 在 `algorithm/` 运行 `uv run --locked python -m starter_algorithm` 验证 Python 包入口。
-- 在根目录运行 `docker compose --profile '*' config --quiet`。服务启动后，用 `./tools/smoke.ps1 -BaseUrl http://127.0.0.1:8088 -Frontend` 检查 Vue 首页和经 Nginx 转发的健康接口。React 使用 `8089`。
+- 在根目录运行 `docker compose --profile '*' config --quiet`。服务启动后，访问 Vue 首页 `http://127.0.0.1:8088/` 和 `http://127.0.0.1:8088/api/health`，检查页面和 Nginx 转发。React 使用 `8089`。
 - 如果采用其他后端技术，按新项目的业务定义接口和部署配置。需要复用检测示例页面时，参考现有 [检测接口契约](contracts/detection.md) 检查兼容性。
 
 ### 前端浏览器回归
@@ -135,3 +167,4 @@ OpenCodeReview 源码随项目保存在 `tools/opencodereview/source/`。Windows
 | [frontend/skills/](frontend/skills/README.md) | Modern Web Guidance、UI UX Pro Max、Vercel React Best Practices |
 | [algorithm/skills/](algorithm/skills/README.md) | ONNX 推理部署、Hugging Face Community Evals |
 | [database/postgres/skills/](database/postgres/AGENTS.md#postgresql-skill) | Supabase PostgreSQL Best Practices |
+| [database/mysql/skills/](database/mysql/AGENTS.md#mysql-skill) | PlanetScale MySQL Skill |

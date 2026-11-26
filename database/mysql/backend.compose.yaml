@@ -1,0 +1,16 @@
+services:
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      MYSQL_JDBC_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-app}
+      MYSQL_USER: ${MYSQL_USER:-app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local_mysql_app}
+      MYSQL_MIGRATIONS_PATH: /app/db/migrations
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./database/mysql/migrations
+        target: /app/db/migrations
+        read_only: true

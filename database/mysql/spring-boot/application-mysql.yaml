@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: ${MYSQL_JDBC_URL:jdbc:mysql://127.0.0.1:3306/app}
+    username: ${MYSQL_USER:app}
+    password: ${MYSQL_PASSWORD:local_mysql_app}
+  flyway:
+    fail-on-missing-locations: true
+    locations: filesystem:${MYSQL_MIGRATIONS_PATH:../database/mysql/migrations}
