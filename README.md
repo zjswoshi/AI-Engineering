@@ -118,6 +118,12 @@ OpenCodeReview 源码随项目保存在 `tools/opencodereview/source/`。Windows
 
 审查使用根目录的 [.opencodereview/rule.json](.opencodereview/rule.json)。`rules check` 需要 Git 仓库，`review` 还需要基线提交。原生审查首次需设置模型和凭证，所选模型服务会收到改动及所需的源码上下文。其他平台的源码构建命令见 [OpenCodeReview 工具说明](tools/opencodereview/README.md)。
 
+## CI/CD
+
+[CI](.github/workflows/ci.yml) 在提交到 `main` 和向 `main` 发起 PR 时运行。Vue 和 React 分别做类型检查、构建和 Playwright 回归，浏览器测试使用模拟 API。后端用 JDK 21 执行 `mvn verify`，算法用 Python 3.12 检查锁文件、传输入口和 ONNX Runtime CPU 环境，Compose 检查基础配置和 PostgreSQL 叠加配置。复制模板后，按项目选型保留对应的构建任务和发布选项。
+
+需要交付镜像时，在 GitHub 的 **Actions → Publish image → Run workflow** 选择 `main` 和一个组件。工作流用仓库的 `GITHUB_TOKEN` 将选定的 `linux/amd64` 镜像推到 GHCR。镜像标签为 `ghcr.io/<小写仓库所有者>/<小写仓库名>-<组件>:sha-<完整提交 SHA>`。Kafka 算法镜像使用 Compose 中的 worker 命令 `python -m starter_algorithm.worker`。在目标环境接入镜像、模型权重和配置。
+
 ## AI 协作入口
 
 各模块的 `AGENTS.md` 记录项目约定和本地 Skill 入口。接手某个模块时，先读该模块说明，再按任务打开对应的 `SKILL.md`。
