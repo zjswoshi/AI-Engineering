@@ -2,6 +2,18 @@
 
 巡检人员登录后打开「叶片检测」，填写风场和风机编号，提交一个图片 ZIP。上传中断后可重新提交。后台使用一个工作进程依次处理，完成后发布在线报告和 PDF。管理员从「巡检账号」创建操作员。统计采用 `blade_defect_v1.1.onnx` 的 DQ、WR、TL、LW、KL、LJ、LJZS、YJPS、FYZTL、ZGTL 十类。缺陷数量按检测框计数。在线报告保留逐图明细，PDF 展示同一份分类统计和最多六张代表性检出图。
 
+## 离线部署
+
+在具备构建环境的机器上构建 GPU Compose 镜像，再打包。命令中的 `--model` 指向待交付的模型文件，`--version` 使用本次发布标识。
+
+```powershell
+docker compose --env-file .env.blade -f compose.blade.yaml -f compose.blade.gpu.yaml build
+docker compose --env-file .env.blade -f compose.blade.yaml -f compose.blade.gpu.yaml pull postgres
+python docker/blade-offline/package.py --version 20261126 --model ./blade-models/blade_defect_v1.1.onnx
+```
+
+打包脚本会读取本机的 `linux/amd64` 镜像并在 `dist/blade-offline/` 生成一个 `.tar.gz`。如果构建时指定了 Compose 项目名，打包时用 `--source-project` 传入相同的名称。将包传到服务器，解压后运行 `sudo bash deploy.sh`。离线包首次启动时生成凭证，默认监听 `127.0.0.1:8090`。见[离线部署说明](../docker/blade-offline/README.md)。
+
 ## 准备 Ubuntu 服务器
 
 准备 Docker Engine、Compose 和 NVIDIA GPU 容器运行环境。用 `nvidia-smi` 核实驱动，记录 `/etc/os-release`。准备空间充足的数据盘。数据目录要包含 `uploads` 和 `reports`，容器用 UID/GID `10001:10001`。将交付的 `blade_defect_v1.1.onnx` 放到模型目录并允许容器读取。原始 ZIP、报告和数据库按部署方的留存规则备份与回收。
