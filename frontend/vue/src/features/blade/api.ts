@@ -20,6 +20,8 @@ export type Summary = {
 export type InspectionImage = {
   index: number
   name: string
+  width: number
+  height: number
   detections: { label: string; confidence: number; polygon: [number, number][] }[]
 }
 

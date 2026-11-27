@@ -1,0 +1,195 @@
+/* Wind farm photo by Spencer DeMera under the Unsplash License. https://unsplash.com/photos/gVovw4ZUd5c */
+.blade-shell, .blade-login, .blade-drawer {
+  --blade-deep: #1c2635;
+  --blade-bg: #eef1f5;
+  --blade-soft: #f4f6f8;
+  --blade-blue-soft: #e8f1ff;
+  --blade-input-line: #8a97a8;
+  --blade-radius: 4px;
+  --surface: #fff;
+  --line: #dbe1e8;
+  --muted: #515f70;
+  --accent: #1555c0;
+  --el-color-primary: var(--accent);
+  --el-color-primary-light-3: #2864cb;
+  --el-color-primary-dark-2: #15449b;
+  --el-color-primary-light-9: var(--blade-blue-soft);
+  --el-color-info: var(--muted);
+  --el-text-color-regular: #344257;
+  --el-border-color: var(--blade-input-line);
+  --el-border-radius-base: var(--blade-radius);
+  color: var(--blade-deep);
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', system-ui, sans-serif;
+  line-height: 1.5;
+}
+.blade-shell :is(h1, h2, h3, h4), .blade-login h1 {
+  font-weight: 500;
+  letter-spacing: normal;
+}
+.blade-shell { background: var(--blade-bg); grid-template-columns: 11rem minmax(0, 1fr); }
+.blade-shell[data-collapsed='true'] { grid-template-columns: 4rem minmax(0, 1fr); }
+.blade-shell .side { background: #20252c; border: 0; color: #f0f4f8; }
+.blade-shell .side .brand { padding: .7rem .75rem; min-height: 3.25rem; border-bottom: 1px solid #383f49; white-space: nowrap; }
+.blade-shell .brand-mark, .blade-login .brand-mark { border-radius: var(--blade-radius); background: #1555c0; color: #fff; }
+.blade-shell .nav { gap: 0; padding: .65rem 0; }
+.blade-shell .nav a { display: flex; align-items: center; gap: .6rem; min-height: 44px; color: #cbd4df; padding-inline: 1rem; border-radius: 0; }
+.blade-shell .nav a:hover { background: #2c333d; }
+.blade-shell .nav a[aria-current='page'] { color: #fff; background: #303d51; font-weight: 600; box-shadow: inset 3px 0 #78adff; }
+.blade-shell .nav a:focus-visible { outline-color: #a2c7ff; outline-offset: -3px; }
+.blade-shell[data-collapsed='true'] :is(.brand-label, .nav-label) { display: none; }
+.blade-shell[data-collapsed='true'] .nav a, .blade-shell[data-collapsed='true'] .side .brand { justify-content: center; }
+.blade-shell .topbar { min-height: 3.25rem; padding: .2rem .8rem; background: #fff; font-size: .875rem; }
+.blade-shell .topbar .el-button { min-height: 44px; }
+.blade-shell .topbar > div { min-width: 0; }
+.blade-shell .topbar > div > span:first-child { overflow-wrap: anywhere; }
+.blade-shell .content { max-width: none; padding: 0 1rem 1rem; }
+.blade-shell .el-button, .blade-drawer .el-button, .blade-login .el-button { min-height: 44px; }
+.blade-shell .el-input, .blade-drawer .el-input, .blade-login .el-input { --el-input-height: 44px; }
+.blade-shell .el-button--primary.is-disabled:not(.is-link), .blade-login .el-button--primary.is-disabled, .blade-drawer .el-button--primary.is-disabled {
+  --el-button-disabled-bg-color: #e6ebf3;
+  --el-button-disabled-border-color: #cfd8e5;
+  --el-button-disabled-text-color: #536379;
+}
+.blade-page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .65rem; min-height: 72px; padding: .85rem 0; }
+.blade-page-header h1 { font-size: clamp(1.25rem, 2.1vw, 1.6rem); margin: 0; }
+.blade-page-header p { margin: .32rem 0 0; font-size: .85rem; }
+.blade-sheet { min-width: 0; border: 1px solid var(--line); background: var(--surface); }
+.blade-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; padding: .5rem 1rem; border-bottom: 1px solid var(--line); }
+.blade-toolbar h2 { margin: 0; font-size: 1rem; }
+.blade-toolbar-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.blade-toolbar-actions .el-button + .el-button, .blade-pagination .el-button + .el-button { margin-inline-start: 0; }
+.blade-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .4rem; padding: .5rem; font-size: .8rem; }
+.blade-drawer .el-drawer__header { margin-bottom: 0; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+.blade-account-form { padding: 1.25rem; }
+.blade-home { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); min-height: 23rem; }
+.blade-home-content { padding: clamp(1.25rem, 4vw, 3.25rem); align-self: center; }
+.blade-home-content h2 {
+  margin-bottom: 1.2rem;
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  line-height: 1.3;
+}
+.blade-home-links {
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+}
+.blade-home-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .75rem;
+  padding: .85rem 1rem;
+  border-radius: .5rem;
+  color: var(--blade-deep);
+  background: var(--surface);
+  text-decoration: none;
+}
+.blade-home-link + .blade-home-link { border-top: 1px solid var(--line); }
+.blade-home-link:not(:last-child) { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.blade-home-link:not(:first-child) { border-top-left-radius: 0; border-top-right-radius: 0; }
+.blade-home-link-primary { background: #f5f8fd; }
+.blade-home-link:hover { background: var(--blade-blue-soft); }
+.blade-home-link:active { background: #e0ebfc; }
+.blade-home-link:focus-visible { outline-offset: -3px; }
+.blade-home-link-title { display: block; font-weight: 500; }
+.blade-home-link-description {
+  display: block;
+  margin-top: .2rem;
+  color: var(--muted);
+  font-size: .875rem;
+}
+.blade-home-link-action {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--muted);
+}
+.blade-home-link-action::after {
+  content: '';
+  inline-size: .42rem;
+  block-size: .42rem;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(-45deg);
+}
+.blade-home-link-primary .blade-home-link-action {
+  padding: .4rem .65rem;
+  border-radius: var(--blade-radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: .8125rem;
+  font-weight: 500;
+}
+.blade-home-link-primary:is(:hover, :active) .blade-home-link-action { background: var(--el-color-primary-dark-2); }
+.blade-home-image { background: url('../assets/wind-farm.webp') center / cover, #35414d; }
+.blade-status { display: inline-flex; align-items: center; gap: .45rem; color: #515d6c; font-size: .8125rem; font-weight: 600; white-space: nowrap; }
+.blade-status::before { content: ''; width: .42rem; height: .42rem; border-radius: 50%; background: currentColor; }
+.blade-status[data-status='COMPLETED'] { color: #186044; }
+.blade-status[data-status='RUNNING'] { color: #1555c0; }
+.blade-status[data-status='FAILED'] { color: #9b3340; }
+
+.blade-login { grid-template-columns: minmax(0, 1.45fr) minmax(22rem, 1fr); place-items: stretch; padding: 0; background: var(--surface); }
+.blade-login-cover { display: flex; align-items: end; min-height: 34rem; color: #fff; background: linear-gradient(0deg, #151e2bf5, #151e2b35 80%), url('../assets/wind-farm.webp') center / cover no-repeat, #20252c; }
+.blade-login-copy { padding: clamp(1.5rem, 5vw, 5rem); }
+.blade-login-copy .brand { padding: 0; min-height: 0; margin-bottom: 1rem; }
+.blade-login-display { font-size: clamp(2.1rem, 4vw, 3.65rem); font-weight: 600; line-height: 1.24; margin: 0 0 .65rem; }
+.blade-login-copy p:last-child { color: #e0e6ee; margin: 0; }
+.blade-login .login-panel { place-self: center; max-width: 27rem; border: 0; border-radius: 0; }
+.blade-login .el-alert { margin-bottom: 1rem; }
+
+@media (max-width: 45rem) {
+  .blade-shell, .blade-shell[data-collapsed='true'] { grid-template-columns: minmax(0, 1fr) auto; align-content: start; }
+  .blade-shell .side, .blade-shell .blade-shell-body { display: contents; }
+  .blade-shell .side .brand {
+    grid-column: 1;
+    grid-row: 1;
+    justify-content: start;
+    min-width: 0;
+    min-height: 48px;
+    padding: .35rem .65rem;
+    background: #20252c;
+  }
+  .blade-shell .brand-mark { flex-basis: 1.6rem; width: 1.6rem; height: 1.6rem; }
+  .blade-shell .brand-label { overflow: hidden; text-overflow: ellipsis; }
+  .blade-shell .topbar {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: end;
+    min-height: 48px;
+    padding: .15rem .65rem .15rem .3rem;
+    background: #20252c;
+    border-color: #383f49;
+    color: #e3ebf7;
+  }
+  .blade-shell .topbar-account { flex-wrap: nowrap; gap: .4rem; }
+  .blade-shell .topbar-account > span:first-child { max-width: 7ch; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+  .blade-shell .topbar-account .el-tag, .blade-shell .nav-toggle, .blade-shell .blade-nav-mark { display: none; }
+  .blade-shell .topbar-account .el-button {
+    --el-button-text-color: #e3ebf7;
+    --el-button-bg-color: transparent;
+    --el-button-border-color: #67768a;
+    --el-button-hover-text-color: #fff;
+    --el-button-hover-bg-color: #303d51;
+    --el-button-hover-border-color: #78adff;
+    padding-inline: .65rem;
+  }
+  .blade-shell .topbar-account .el-button:focus-visible { outline-color: #a2c7ff; }
+  .blade-shell .nav { grid-column: 1 / -1; grid-row: 2; padding: 0 .4rem; background: #20252c; }
+  .blade-shell .nav a { padding-inline: .75rem; }
+  .blade-shell .nav a[aria-current='page'] { box-shadow: inset 0 -3px #78adff; }
+  .blade-shell[data-collapsed='true'] :is(.brand-label, .nav-label) { display: inline; }
+  .blade-shell .content { grid-column: 1 / -1; grid-row: 3; padding-inline: .65rem; }
+  .blade-shell .el-input, .blade-login .el-input, .blade-drawer .el-input { --el-font-size-base: 1rem; }
+  .blade-page-header { min-height: 3.5rem; }
+  .blade-toolbar { padding-inline: .75rem; }
+  .blade-drawer .el-drawer__close-btn { min-width: 44px; min-height: 44px; }
+  .blade-drawer .el-drawer__body { padding: .85rem .95rem 1.3rem; }
+  .blade-login { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-content: start; }
+  .blade-login-cover { min-height: 0; }
+  .blade-login-copy { padding: 1.15rem 1rem; }
+  .blade-login-copy .brand { margin-bottom: .6rem; }
+  .blade-login-display { font-size: clamp(1.5rem, 6vw, 2.3rem); }
+  .blade-login-copy .blade-login-display br { display: none; }
+  .blade-login .login-panel { padding: 1.15rem 1rem 1.5rem; }
+  .blade-home { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .blade-home-image { aspect-ratio: 12 / 5; }
+}

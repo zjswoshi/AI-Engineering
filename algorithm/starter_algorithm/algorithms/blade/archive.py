@@ -4,13 +4,14 @@ import shutil
 import warnings
 from collections import Counter
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from uuid import UUID
 from zipfile import BadZipFile, ZipFile
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .model import CLASSES
-from .report import preview, write_pdf
+from .report import MAX_SAMPLE_IMAGES, preview, sample_evidence, write_pdf
 
 SUPPORTED = {".jpg", ".jpeg", ".png"}
 MAX_MEMBER_BYTES = 100_000_000
@@ -32,8 +33,9 @@ def inspect_archive(task: dict, data_dir: Path, predictor, font_path: str, expan
     staging = reports / f".{attempt}.partial"
     staging.mkdir()
     try:
-        summary, samples = process_archive(task, archive, staging, predictor, expanded_limit)
-        write_pdf(staging / "report.pdf", summary, samples, font_path)
+        with TemporaryDirectory(prefix="pdf-", dir=staging) as evidence_dir:
+            summary, samples = process_archive(task, archive, staging, Path(evidence_dir), predictor, expanded_limit)
+            write_pdf(staging / "report.pdf", summary, samples, font_path)
         write_json(staging / "summary.json", summary)
         staging.replace(output)
     finally:
@@ -41,7 +43,7 @@ def inspect_archive(task: dict, data_dir: Path, predictor, font_path: str, expan
             shutil.rmtree(staging)
 
 
-def process_archive(task, archive, output, predictor, expanded_limit):
+def process_archive(task, archive, output, evidence_dir, predictor, expanded_limit):
     tally = Counter(dict.fromkeys(CLASSES, 0))
     samples = []
     image_count = 0
@@ -63,8 +65,8 @@ def process_archive(task, archive, output, predictor, expanded_limit):
                     hit_count += bool(detections)
                     image_path = output / f"image-{image_count}.jpg"
                     preview(image, detections, image_path)
-                    if detections and len(samples) < 6:
-                        samples.append((info.filename, image_path))
+                    if detections and len(samples) < MAX_SAMPLE_IMAGES:
+                        samples.append(sample_evidence(image, detections, info.filename, evidence_dir, image_count))
                     write_json(output / f"image-{image_count}.json", {
                         "index": image_count, "name": info.filename, "width": image.width, "height": image.height,
                         "detections": [{"label": item.label, "confidence": item.confidence, "polygon": item.polygon}

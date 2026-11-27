@@ -6,16 +6,16 @@ export type Section = { path: string; label: string; short: string; roles?: read
 type FeatureModule = { section: Section; workbench: Component }
 
 // Optional feature registrations live here so a copy can drop the entire example from the shell.
-const blade = import.meta.env.VITE_BLADE_INSPECTION === 'true'
+export const bladeMode = import.meta.env.VITE_BLADE_INSPECTION === 'true'
 const modules: FeatureModule[] = [{
   section: { path: '/detections', label: '检测任务', short: '检测', component: () => import('../views/DetectionsView.vue') },
   workbench: defineAsyncComponent(() => import('../features/detection/RecentDetections.vue')),
 }]
 
-export const workbenchFeatures = (blade ? [] : modules).map((feature) => feature.workbench)
+export const workbenchFeatures = (bladeMode ? [] : modules).map((feature) => feature.workbench)
 export const sections: Section[] = [
   { path: '/', label: '工作台', short: '首页', component: () => import('../views/WorkbenchView.vue') },
-  ...(blade ? [
+  ...(bladeMode ? [
     { path: '/detections', label: '叶片检测', short: '检测', component: () => import('../views/BladeInspectionsView.vue') },
     { path: '/admin/operators', label: '巡检账号', short: '账号', roles: ['ADMIN'] as const, component: () => import('../views/BladeAccountsView.vue') },
   ] : [

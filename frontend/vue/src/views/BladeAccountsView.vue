@@ -28,8 +28,9 @@ async function create() {
 </script>
 
 <template>
-  <div class="page-title"><div><h1>巡检账号</h1></div></div>
-  <section class="panel">
+  <header class="blade-page-header"><div><h1>巡检账号</h1><p class="muted">为巡检人员开通账号，按账号管理各自的检测任务。</p></div></header>
+  <section class="blade-sheet blade-account-form" aria-labelledby="new-operator-heading">
+    <h2 id="new-operator-heading">创建账号</h2>
     <form class="grid gap-4 max-w-md" @submit.prevent="create">
       <div class="field"><label for="operator-name">账号</label><ElInput id="operator-name" v-model="username" maxlength="40" autocomplete="off" /></div>
       <div class="field"><label for="operator-password">密码</label><ElInput id="operator-password" v-model="password" type="password" autocomplete="new-password" /><p class="muted">至少 12 个字符。账号使用字母、数字、点、下划线或短横线。</p></div>

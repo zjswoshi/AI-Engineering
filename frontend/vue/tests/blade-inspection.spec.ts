@@ -8,6 +8,8 @@ const basic = (username: string, password: string) => ({
   ...xhr, Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`,
 })
 
+test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+
 test.skip(!sample || !adminPassword || !process.env.E2E_BASE_URL, 'Requires the running blade Compose stack and a real fixture ZIP')
 
 test('uploads a real inspection, publishes the report, and isolates its artifacts', async ({ page, request }) => {
@@ -31,10 +33,19 @@ test('uploads a real inspection, publishes the report, and isolates its artifact
   expect(badZip.status()).toBe(400)
   expect(await badZip.json()).toMatchObject({ code: 'INVALID_ARCHIVE' })
 
-  await page.goto('/detections')
+  await page.goto('/')
   await page.getByLabel('账号', { exact: true }).fill(owner)
   await page.getByLabel('密码', { exact: true }).fill(password)
   await page.getByRole('button', { name: '登录' }).click()
+  const shortcuts = page.getByRole('navigation', { name: '工作台快捷入口' })
+  const inspection = shortcuts.getByRole('link', { name: '叶片检测' })
+  await expect(inspection).toBeVisible()
+  await expect(shortcuts.getByRole('link', { name: '巡检账号' })).toHaveCount(0)
+  await inspection.press('Enter')
+  await expect(page).toHaveURL(/\/detections$/)
+  await expect(page.getByRole('heading', { name: '历史检测任务' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390)
+  await page.getByRole('button', { name: '新建检测' }).click()
   await page.getByLabel('风场', { exact: true }).fill('验证风场')
   await page.getByLabel('风机编号', { exact: true }).fill('WT-001')
   await page.getByLabel('图片 ZIP', { exact: true }).setInputFiles(sample!)
@@ -48,13 +59,25 @@ test('uploads a real inspection, publishes the report, and isolates its artifact
   expect(Object.keys(summary.classes)).toHaveLength(10)
   expect(Object.values<number>(summary.classes).reduce((left, right) => left + right, 0)).toBe(summary.detectionCount)
   await expect(page.getByRole('definition').first()).toHaveText(String(summary.imageCount))
-  await page.getByRole('list', { name: '逐图明细' }).getByRole('button').first().click()
+  const picker = page.getByRole('combobox', { name: '巡检图片' })
+  await expect(picker).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390)
+  const previous = await picker.inputValue()
+  const options = await picker.locator('option').evaluateAll((elements: HTMLOptionElement[]) => elements.map((option) => option.value))
+  const next = options.find((value) => value !== previous) ?? previous
+  await picker.selectOption(next)
+  await expect(picker).toHaveValue(next)
   const preview = page.getByRole('img', { name: /的检测标注/ })
   await expect(preview).toBeVisible()
   await expect.poll(() => preview.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0)
+  const imageViewport = page.locator('#inspection-image-viewport')
+  await page.getByRole('button', { name: '放大图片' }).tap()
+  await expect.poll(() => imageViewport.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeGreaterThan(0)
+  await page.getByRole('button', { name: '适应屏幕' }).tap()
+  await expect.poll(() => imageViewport.evaluate((element) => element.scrollWidth - element.clientWidth)).toBe(0)
   const [download] = await Promise.all([
     page.waitForEvent('download', { timeout: 15_000 }),
-    page.getByRole('button', { name: '下载 PDF' }).press('Enter'),
+    page.getByRole('button', { name: '下载 PDF' }).tap(),
   ])
   expect(download.suggestedFilename()).toBe(`blade-report-${id}.pdf`)
   expect((await readFile((await download.path())!)).subarray(0, 5).toString()).toBe('%PDF-')
@@ -64,5 +87,10 @@ test('uploads a real inspection, publishes the report, and isolates its artifact
     expect((await request.get(`${taskPath}${endpoint}`, { headers: admin })).status()).toBe(200)
   }
   await page.getByRole('link', { name: '返回检测任务' }).click()
-  await expect(page.getByRole('button', { name: '查看报告' })).toBeVisible()
+  const latestReport = page.getByRole('button', { name: '查看报告' })
+  await expect(latestReport).toBeInViewport()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await latestReport.click()
+  await expect(page.getByRole('list', { name: '逐图明细' })).toBeVisible()
 })
